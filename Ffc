@@ -1,0 +1,5 @@
+<script>
+fetch("https://banco-cafunfo.onrender.com/usuarios")
+  .then(r => r.json())
+  .then(d => console.log(d))
+</script>
