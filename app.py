@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import banco
 
@@ -7,10 +7,7 @@ CORS(app)
 
 @app.route("/")
 def home():
-    return {
-        "status": "ok",
-        "mensagem": "Banco de dados Cafunfo ativo"
-    }
+    return render_template("index.html")
 
 @app.route("/usuarios", methods=["GET"])
 def listar():
