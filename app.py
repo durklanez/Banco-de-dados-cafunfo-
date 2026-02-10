@@ -1,19 +1,17 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import banco
 
 app = Flask(__name__)
+CORS(app)
 
-@app.route("/usuarios", methods=["POST"])
-def criar_usuario():
-    data = request.json
-    nome = data.get("nome")
-    email = data.get("email")
-    banco.salvar_usuario(nome, email)
-    return jsonify({"status": "sucesso"}), 201
+@app.route("/")
+def home():
+    return {
+        "status": "ok",
+        "mensagem": "Banco de dados Cafunfo ativo"
+    }
 
 @app.route("/usuarios", methods=["GET"])
-def pegar_usuarios():
+def listar():
     return jsonify(banco.listar_usuarios())
-
-if __name__ == "__main__":
-    app.run(debug=True)
