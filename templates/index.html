@@ -1,1 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Banco Cafunfo</title>
+</head>
+<body>
+  <h1>Banco de Dados Cafunfo</h1>
+  <p>Backend ativo 🚀</p>
 
+  <button onclick="carregar()">Ver usuários</button>
+  <ul id="lista"></ul>
+
+  <script>
+    function carregar() {
+      fetch("/usuarios")
+        .then(r => r.json())
+        .then(d => {
+          const ul = document.getElementById("lista");
+          ul.innerHTML = "";
+          d.forEach(u => {
+            const li = document.createElement("li");
+            li.textContent = u.nome + " - " + u.email;
+            ul.appendChild(li);
+          });
+        });
+    }
+  </script>
+</body>
+</html>
