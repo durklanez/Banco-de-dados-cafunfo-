@@ -1,30 +1,36 @@
-<!DOCTYPE html>
-<html lang="pt">
-<head>
-  <meta charset="UTF-8">
-  <title>Banco Cafunfo</title>
-</head>
-<body>
-  <h1>Banco de Dados Cafunfo</h1>
-  <p>Backend ativo 🚀</p>
+<h2>Cadastrar vendedor</h2>
 
-  <button onclick="carregar()">Ver usuários</button>
-  <ul id="lista"></ul>
+<input id="nome" placeholder="Nome"><br>
+<input id="produto" placeholder="Produto"><br>
+<input id="telefone" placeholder="Telefone"><br>
+<button onclick="salvar()">Salvar</button>
 
-  <script>
-    function carregar() {
-      fetch("/usuarios")
+<h2>Vendedores</h2>
+<ul id="lista"></ul>
+
+<script>
+function salvar() {
+    fetch("/api/vendedor", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            nome: nome.value,
+            produto: produto.value,
+            telefone: telefone.value
+        })
+    }).then(() => carregar())
+}
+
+function carregar() {
+    fetch("/api/vendedores")
         .then(r => r.json())
-        .then(d => {
-          const ul = document.getElementById("lista");
-          ul.innerHTML = "";
-          d.forEach(u => {
-            const li = document.createElement("li");
-            li.textContent = u.nome + " - " + u.email;
-            ul.appendChild(li);
-          });
-        });
-    }
-  </script>
-</body>
-</html>
+        .then(dados => {
+            lista.innerHTML = ""
+            dados.forEach(v => {
+                lista.innerHTML += `<li>${v.nome} - ${v.produto}</li>`
+            })
+        })
+}
+
+carregar()
+</script>
