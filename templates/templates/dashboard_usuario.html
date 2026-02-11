@@ -1,1 +1,13 @@
+<h2>Painel ADMIN</h2>
 
+<p>Total de usuários: {{ total_usuarios }}</p>
+
+<h3>Logs do sistema</h3>
+
+<ul>
+{% for log in logs %}
+  <li>{{ log.usuario }} - {{ log.acao }} - {{ log.data }}</li>
+{% endfor %}
+</ul>
+
+<a href="/logout">Sair</a>
