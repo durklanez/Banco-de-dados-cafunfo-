@@ -1,1 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Painel Admin</title>
+</head>
+<body style="font-family:Arial;">
 
+    <h1 style="text-align:center;">Painel Administrativo</h1>
+
+    <h3>Total de Usuários: {{ total_usuarios }}</h3>
+
+    <h3>Logs do Sistema:</h3>
+
+    <ul>
+        {% for log in logs %}
+            <li>
+                {{ log.usuario }} - {{ log.acao }} - {{ log.data }}
+            </li>
+        {% endfor %}
+    </ul>
+
+    <br>
+    <a href="/logout">
+        <button>Sair</button>
+    </a>
+
+</body>
+</html>
