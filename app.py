@@ -97,7 +97,6 @@ def download_db():
     if "usuario" not in session:
         return redirect("/login")
 
-    # Cria arquivo em memória
     db_data = {
         "usuarios": ler_usuarios(),
         "logs": json.load(open(LOGS_ARQ, "r", encoding="utf-8"))
@@ -117,3 +116,7 @@ def download_db():
 def logout():
     session.clear()
     return redirect("/")
+
+# --- Bloco principal para rodar localmente ---
+if __name__ == "__main__":
+    app.run(debug=True)
