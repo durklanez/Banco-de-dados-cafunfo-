@@ -1,50 +1,5 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Painel Admin</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <style>
-        body{
-            font-family: Arial;
-            background: linear-gradient(135deg,#cb2d3e,#ef473a);
-            color:white;
-            padding:30px;
-        }
-
-        ul{
-            background:white;
-            color:black;
-            padding:20px;
-            border-radius:8px;
-        }
-
-        button{
-            padding:10px;
-            background:black;
-            color:white;
-            border:none;
-            border-radius:6px;
-        }
-    </style>
-</head>
-
-<body>
-
-    <h1>Painel Administrativo</h1>
-
-    <h3>Total de Usuários: {{ total_usuarios }}</h3>
-
-    <h3>Logs do Sistema:</h3>
-
-    <ul>
-        {% for log in logs %}
-            <li>{{ log.usuario }} - {{ log.acao }} - {{ log.data }}</li>
-        {% endfor %}
-    </ul>
-
-    <br>
-    <a href="/logout"><button>Sair</button></a>
-
-</body>
-</html>
+<ul>
+{% for log in logs %}
+    <li>{{ log[0] }} - {{ log[1] }} - {{ log[2] }}</li>
+{% endfor %}
+</ul>
