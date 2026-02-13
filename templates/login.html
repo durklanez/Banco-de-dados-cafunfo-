@@ -1,45 +1,52 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt">
 <head>
-    <title>Login</title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <title>Login - Cafunfo Cloud</title>
     <style>
-        body{
-            font-family: Arial;
-            background: linear-gradient(135deg,#11998e,#38ef7d);
-            text-align:center;
-            padding-top:80px;
+        body { 
+            font-family: 'Arial', sans-serif; 
+            background: linear-gradient(135deg, #ff416c, #ff4b2b); 
+            color: white; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
         }
-
-        input{
-            padding:12px;
-            width:250px;
-            margin:10px;
-            border-radius:6px;
-            border:none;
+        form {
+            background-color: rgba(0,0,0,0.5);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            width: 300px;
         }
-
-        button{
-            padding:12px;
-            width:260px;
-            background:black;
-            color:white;
-            border:none;
-            border-radius:6px;
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: none;
         }
+        button {
+            padding: 12px 20px;
+            border-radius: 10px;
+            border: none;
+            background-color: #ffcc00;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:hover { background-color: #e6b800; }
+        a { color: #fff; font-size: 0.9em; text-decoration: none; }
     </style>
 </head>
-
 <body>
-
-    <h2>Entrar no Banco</h2>
-
     <form method="POST">
-        <input type="email" name="email" placeholder="Email" required><br>
-        <input type="password" name="senha" placeholder="Senha" required><br>
-        <button type="submit">Entrar</button>
+        <h2>Entrar</h2>
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="password" name="senha" placeholder="Senha" required>
+        <button type="submit">Login</button>
+        <p>Não tem conta? <a href="/registrar">Registrar</a></p>
     </form>
-
 </body>
 </html>
