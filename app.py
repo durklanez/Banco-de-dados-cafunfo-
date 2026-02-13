@@ -1,37 +1,68 @@
 from flask import Flask, render_template, request, redirect, session
-import json
-import datetime
+import sqlite3
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.secret_key = "cafunfo_secret"
 
-USUARIOS_ARQ = "usuarios.json"
-LOGS_ARQ = "logs.json"
+# sessão dura 30 minutos
+app.permanent_session_lifetime = timedelta(minutes=30)
+
+DATABASE = "cafunfo.db"
 
 
-def ler_usuarios():
-    with open(USUARIOS_ARQ, "r", encoding="utf-8") as f:
-        return json.load(f)
+# ----------------------
+# CRIAR BANCO AUTOMÁTICO
+# ----------------------
+def criar_banco():
+    conn = sqlite3.connect(DATABASE)
+    c = conn.cursor()
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS usuarios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT,
+        email TEXT UNIQUE,
+        senha TEXT,
+        tipo TEXT
+    )
+    """)
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        usuario TEXT,
+        acao TEXT,
+        data TEXT
+    )
+    """)
+
+    # cria admin padrão se não existir
+    c.execute("SELECT * FROM usuarios WHERE email = ?", ("admin@cafunfo.com",))
+    if not c.fetchone():
+        c.execute("INSERT INTO usuarios (nome,email,senha,tipo) VALUES (?,?,?,?)",
+                  ("Durk", "admin@cafunfo.com", "123456", "admin"))
+
+    conn.commit()
+    conn.close()
 
 
-def salvar_usuarios(dados):
-    with open(USUARIOS_ARQ, "w", encoding="utf-8") as f:
-        json.dump(dados, f, indent=2)
+def conectar():
+    return sqlite3.connect(DATABASE)
 
 
 def registrar_log(email, acao):
-    with open(LOGS_ARQ, "r", encoding="utf-8") as f:
-        logs = json.load(f)
+    conn = conectar()
+    c = conn.cursor()
+    c.execute("INSERT INTO logs (usuario,acao,data) VALUES (?,?,?)",
+              (email, acao, str(datetime.now())))
+    conn.commit()
+    conn.close()
 
-    logs.append({
-        "usuario": email,
-        "acao": acao,
-        "data": str(datetime.datetime.now())
-    })
 
-    with open(LOGS_ARQ, "w", encoding="utf-8") as f:
-        json.dump(logs, f, indent=2)
-
+# ----------------------
+# ROTAS
+# ----------------------
 
 @app.route("/")
 def home():
@@ -41,20 +72,23 @@ def home():
 @app.route("/registrar", methods=["GET", "POST"])
 def registrar():
     if request.method == "POST":
-        usuarios = ler_usuarios()
+        nome = request.form["nome"]
+        email = request.form["email"]
+        senha = request.form["senha"]
 
-        novo = {
-            "nome": request.form["nome"],
-            "email": request.form["email"],
-            "senha": request.form["senha"],
-            "tipo": "usuario"
-        }
+        conn = conectar()
+        c = conn.cursor()
 
-        usuarios.append(novo)
-        salvar_usuarios(usuarios)
+        try:
+            c.execute("INSERT INTO usuarios (nome,email,senha,tipo) VALUES (?,?,?,?)",
+                      (nome, email, senha, "usuario"))
+            conn.commit()
+            registrar_log(email, "criou_conta")
+        except:
+            conn.close()
+            return "Email já existe!"
 
-        registrar_log(novo["email"], "criou_conta")
-
+        conn.close()
         return redirect("/login")
 
     return render_template("registrar.html")
@@ -66,13 +100,23 @@ def login():
         email = request.form["email"]
         senha = request.form["senha"]
 
-        usuarios = ler_usuarios()
+        conn = conectar()
+        c = conn.cursor()
 
-        for u in usuarios:
-            if u["email"] == email and u["senha"] == senha:
-                session["usuario"] = u
-                registrar_log(email, "login")
-                return redirect("/dashboard")
+        c.execute("SELECT * FROM usuarios WHERE email=? AND senha=?", (email, senha))
+        usuario = c.fetchone()
+        conn.close()
+
+        if usuario:
+            session.permanent = True
+            session["usuario"] = {
+                "id": usuario[0],
+                "nome": usuario[1],
+                "email": usuario[2],
+                "tipo": usuario[4]
+            }
+            registrar_log(email, "login")
+            return redirect("/dashboard")
 
         return "Login inválido"
 
@@ -87,13 +131,19 @@ def dashboard():
     usuario = session["usuario"]
 
     if usuario["tipo"] == "admin":
-        usuarios = ler_usuarios()
+        conn = conectar()
+        c = conn.cursor()
 
-        with open(LOGS_ARQ, "r", encoding="utf-8") as f:
-            logs = json.load(f)
+        c.execute("SELECT COUNT(*) FROM usuarios")
+        total = c.fetchone()[0]
+
+        c.execute("SELECT usuario,acao,data FROM logs ORDER BY id DESC")
+        logs = c.fetchall()
+
+        conn.close()
 
         return render_template("dashboard_admin.html",
-                               total_usuarios=len(usuarios),
+                               total_usuarios=total,
                                logs=logs)
 
     return render_template("dashboard_usuario.html",
@@ -107,4 +157,5 @@ def logout():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    criar_banco()
+    app.run()
