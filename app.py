@@ -3,24 +3,34 @@ import json
 import datetime
 import io
 
+# --- Inicialização ---
 app = Flask(__name__)
 app.secret_key = "cafunfo_secret"
 
 USUARIOS_ARQ = "usuarios.json"
 LOGS_ARQ = "logs.json"
 
-# --- Funções ---
+# --- Funções auxiliares ---
 def ler_usuarios():
-    with open(USUARIOS_ARQ, "r", encoding="utf-8") as f:
-        return json.load(f)
+    """Lê os usuários do arquivo JSON"""
+    try:
+        with open(USUARIOS_ARQ, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return []
 
 def salvar_usuarios(dados):
+    """Salva os usuários no arquivo JSON"""
     with open(USUARIOS_ARQ, "w", encoding="utf-8") as f:
         json.dump(dados, f, indent=2)
 
 def registrar_log(email, acao):
-    with open(LOGS_ARQ, "r", encoding="utf-8") as f:
-        logs = json.load(f)
+    """Registra uma ação do usuário no arquivo de logs"""
+    try:
+        with open(LOGS_ARQ, "r", encoding="utf-8") as f:
+            logs = json.load(f)
+    except FileNotFoundError:
+        logs = []
 
     logs.append({
         "usuario": email,
@@ -42,6 +52,7 @@ def registrar():
         usuarios = ler_usuarios()
         email = request.form["email"]
 
+        # Verifica se o email já existe
         if any(u["email"] == email for u in usuarios):
             return "Este email já existe"
 
@@ -49,7 +60,7 @@ def registrar():
             "nome": request.form["nome"],
             "email": email,
             "senha": request.form["senha"],
-            "tipo": "usuario"
+            "tipo": "usuario"  # padrão
         }
 
         usuarios.append(novo)
@@ -84,8 +95,11 @@ def dashboard():
 
     usuario = session["usuario"]
     usuarios = ler_usuarios()
-    with open(LOGS_ARQ, "r", encoding="utf-8") as f:
-        logs = json.load(f)
+    try:
+        with open(LOGS_ARQ, "r", encoding="utf-8") as f:
+            logs = json.load(f)
+    except FileNotFoundError:
+        logs = []
 
     return render_template("dashboard.html",
                            usuario=usuario,
@@ -97,12 +111,14 @@ def download_db():
     if "usuario" not in session:
         return redirect("/login")
 
+    # Cria arquivo JSON em memória
     db_data = {
         "usuarios": ler_usuarios(),
         "logs": json.load(open(LOGS_ARQ, "r", encoding="utf-8"))
     }
+
     json_bytes = io.BytesIO()
-    json_bytes.write(json.dumps(db_data, indent=2).encode())
+    json_bytes.write(json.dumps(db_data, indent=2).encode("utf-8"))
     json_bytes.seek(0)
 
     return send_file(
@@ -117,6 +133,6 @@ def logout():
     session.clear()
     return redirect("/")
 
-# --- Bloco principal para rodar localmente ---
+# --- Inicialização do servidor ---
 if __name__ == "__main__":
     app.run(debug=True)
