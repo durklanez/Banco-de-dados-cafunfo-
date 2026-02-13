@@ -1,14 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt">
 <head>
-    <title>Upload - Cafunfo Cloud</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cafunfo Cloud</title>
+    <style>
+        body { 
+            font-family: 'Arial', sans-serif; 
+            background: linear-gradient(135deg, #6a11cb, #2575fc); 
+            color: white; 
+            text-align: center; 
+            padding: 50px;
+        }
+        h1 { font-size: 3em; margin-bottom: 10px; }
+        p { font-size: 1.2em; margin-bottom: 30px; }
+        a.button {
+            display: inline-block;
+            margin: 10px;
+            padding: 15px 30px;
+            background-color: #ffcc00;
+            color: #333;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        a.button:hover { background-color: #e6b800; }
+    </style>
 </head>
 <body>
-    <h1>Enviar Arquivo</h1>
-    <form method="POST" enctype="multipart/form-data">
-        <input type="file" name="arquivo" required>
-        <button type="submit">Enviar</button>
-    </form>
-    <a href="/dashboard">Voltar ao Dashboard</a>
+    <h1>Banco de Dados Cafunfo</h1>
+    <p>Seja bem-vindo ao seu espaço na nuvem</p>
+    <a href="/login" class="button">Entrar</a>
+    <a href="/registrar" class="button">Criar Conta</a>
 </body>
 </html>
