@@ -1,22 +1,47 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Banco de Dados Cafunfo</title>
-</head>
-<body style="text-align:center; font-family:Arial;">
+    <title>Banco Cafunfo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <h1 style="font-size:40px;">BANCO DE DADOS CAFUNFO</h1>
-    <p>Seja bem-vindo ao nosso banco oficial.</p>
+    <style>
+        body{
+            margin:0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg,#1e3c72,#2a5298);
+            color:white;
+            text-align:center;
+            padding-top:80px;
+        }
+
+        h1{
+            font-size:32px;
+        }
+
+        button{
+            padding:15px;
+            width:200px;
+            border:none;
+            border-radius:8px;
+            margin:10px;
+            font-size:16px;
+            cursor:pointer;
+        }
+
+        .btn1{ background:white; color:#1e3c72; }
+        .btn2{ background:#00c6ff; color:white; }
+    </style>
+</head>
+
+<body>
+
+    <h1>BANCO DE DADOS CAFUNFO</h1>
+    <p>Seja bem-vindo ao nosso banco oficial</p>
 
     <br>
 
-    <a href="/login">
-        <button>Entrar</button>
-    </a>
-
-    <a href="/registrar">
-        <button>Criar Conta</button>
-    </a>
+    <a href="/login"><button class="btn1">Entrar</button></a>
+    <a href="/registrar"><button class="btn2">Criar Conta</button></a>
 
 </body>
-</html>
+    </html>
