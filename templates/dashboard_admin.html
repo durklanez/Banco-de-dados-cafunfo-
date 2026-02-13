@@ -1,5 +1,28 @@
-<ul>
-{% for log in logs %}
-    <li>{{ log[0] }} - {{ log[1] }} - {{ log[2] }}</li>
-{% endfor %}
-</ul>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Painel Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body style="font-family:Arial; padding:20px;">
+
+    <h1>Painel Administrativo</h1>
+
+    <h3>Total de Usuários: {{ total_usuarios }}</h3>
+
+    <h3>Logs do Sistema:</h3>
+
+    <ul>
+    {% for log in logs %}
+        <li>{{ log[0] }} - {{ log[1] }} - {{ log[2] }}</li>
+    {% endfor %}
+    </ul>
+
+    <br>
+    <a href="/logout">
+        <button>Sair</button>
+    </a>
+
+</body>
+</html>
