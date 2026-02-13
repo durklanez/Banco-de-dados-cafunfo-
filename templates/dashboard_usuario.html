@@ -1,38 +1,33 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt">
 <head>
-    <title>Painel Usuário</title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <title>Dashboard Usuário</title>
     <style>
-        body{
-            font-family: Arial;
-            background:#0f2027;
-            background: linear-gradient(to right,#2c5364,#203a43,#0f2027);
-            color:white;
-            text-align:center;
-            padding-top:80px;
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ff7e5f, #feb47b);
+            color: #333;
+            padding: 50px;
         }
-
-        button{
-            padding:12px;
-            width:200px;
-            background:white;
-            color:black;
-            border:none;
-            border-radius:6px;
+        h1 { margin-bottom: 20px; }
+        a.button {
+            display: inline-block;
+            margin: 10px 0;
+            padding: 12px 25px;
+            background-color: #333;
+            color: #fff;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
         }
+        a.button:hover { background-color: #555; }
     </style>
 </head>
-
 <body>
-
-    <h2>Bem-vindo {{ nome }}</h2>
-    <p>Seu banco está ativo.</p>
-
-    <a href="/logout">
-        <button>Sair</button>
-    </a>
-
+    <h1>Bem-vindo, {{ nome }}!</h1>
+    <a href="/upload" class="button">Enviar Arquivo</a><br>
+    <a href="/logout" class="button">Sair</a>
 </body>
 </html>
