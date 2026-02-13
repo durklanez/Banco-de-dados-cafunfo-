@@ -1,1 +1,8 @@
-
+[
+  {
+    "nome": "Durk",
+    "email": "admin@cafunfo.com",
+    "senha": "123456",
+    "tipo": "admin"
+  }
+]
