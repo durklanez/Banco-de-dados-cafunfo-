@@ -1,76 +1,25 @@
 from flask import Flask, render_template, request, redirect, session
-import sqlite3
-from datetime import datetime, timedelta
+import json
+import datetime
+import os
+from minio import Minio
+from banco import ler_usuarios, salvar_usuarios, registrar_log
 
 app = Flask(__name__)
 app.secret_key = "cafunfo_secret"
-app.permanent_session_lifetime = timedelta(minutes=30)
 
-DATABASE = "cafunfo.db"
+# Configuração MinIO (Cafunfo Cloud)
+MINIO_CLIENT = Minio(
+    "localhost:9000",      # Troque para URL do MinIO real se estiver na nuvem
+    access_key="admin",
+    secret_key="senha123",
+    secure=False
+)
+BUCKET_NAME = "arquivos"
 
+if not MINIO_CLIENT.bucket_exists(BUCKET_NAME):
+    MINIO_CLIENT.make_bucket(BUCKET_NAME)
 
-# -----------------------
-# CONEXÃO
-# -----------------------
-def conectar():
-    return sqlite3.connect(DATABASE)
-
-
-# -----------------------
-# CRIAR BANCO AUTOMATICAMENTE
-# -----------------------
-def criar_banco():
-    conn = conectar()
-    c = conn.cursor()
-
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS usuarios (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT,
-        email TEXT UNIQUE,
-        senha TEXT,
-        tipo TEXT
-    )
-    """)
-
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS logs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        usuario TEXT,
-        acao TEXT,
-        data TEXT
-    )
-    """)
-
-    # cria admin padrão se não existir
-    c.execute("SELECT * FROM usuarios WHERE email=?", ("admin@cafunfo.com",))
-    if not c.fetchone():
-        c.execute("INSERT INTO usuarios (nome,email,senha,tipo) VALUES (?,?,?,?)",
-                  ("Durk", "admin@cafunfo.com", "123456", "admin"))
-
-    conn.commit()
-    conn.close()
-
-
-# 🔥 IMPORTANTE: Executa sempre
-criar_banco()
-
-
-# -----------------------
-# REGISTRAR LOG
-# -----------------------
-def registrar_log(email, acao):
-    conn = conectar()
-    c = conn.cursor()
-    c.execute("INSERT INTO logs (usuario,acao,data) VALUES (?,?,?)",
-              (email, acao, str(datetime.now())))
-    conn.commit()
-    conn.close()
-
-
-# -----------------------
-# ROTAS
-# -----------------------
 
 @app.route("/")
 def home():
@@ -80,23 +29,23 @@ def home():
 @app.route("/registrar", methods=["GET", "POST"])
 def registrar():
     if request.method == "POST":
-        nome = request.form["nome"]
+        usuarios = ler_usuarios()
         email = request.form["email"]
-        senha = request.form["senha"]
 
-        conn = conectar()
-        c = conn.cursor()
+        # Bloquear email duplicado
+        if any(u["email"] == email for u in usuarios):
+            return "E-mail já cadastrado!"
 
-        try:
-            c.execute("INSERT INTO usuarios (nome,email,senha,tipo) VALUES (?,?,?,?)",
-                      (nome, email, senha, "usuario"))
-            conn.commit()
-            registrar_log(email, "criou_conta")
-        except:
-            conn.close()
-            return "Email já existe!"
+        novo_usuario = {
+            "nome": request.form["nome"],
+            "email": email,
+            "senha": request.form["senha"],
+            "tipo": "usuario"
+        }
 
-        conn.close()
+        usuarios.append(novo_usuario)
+        salvar_usuarios(usuarios)
+        registrar_log(email, "criou_conta")
         return redirect("/login")
 
     return render_template("registrar.html")
@@ -107,25 +56,13 @@ def login():
     if request.method == "POST":
         email = request.form["email"]
         senha = request.form["senha"]
+        usuarios = ler_usuarios()
 
-        conn = conectar()
-        c = conn.cursor()
-
-        c.execute("SELECT * FROM usuarios WHERE email=? AND senha=?", (email, senha))
-        usuario = c.fetchone()
-        conn.close()
-
-        if usuario:
-            session.permanent = True
-            session["usuario"] = {
-                "id": usuario[0],
-                "nome": usuario[1],
-                "email": usuario[2],
-                "tipo": usuario[4]
-            }
-            registrar_log(email, "login")
-            return redirect("/dashboard")
-
+        for u in usuarios:
+            if u["email"] == email and u["senha"] == senha:
+                session["usuario"] = u
+                registrar_log(email, "login")
+                return redirect("/dashboard")
         return "Login inválido"
 
     return render_template("login.html")
@@ -139,31 +76,34 @@ def dashboard():
     usuario = session["usuario"]
 
     if usuario["tipo"] == "admin":
-        conn = conectar()
-        c = conn.cursor()
-
-        c.execute("SELECT COUNT(*) FROM usuarios")
-        total = c.fetchone()[0]
-
-        c.execute("SELECT usuario, acao, data FROM logs ORDER BY id DESC")
-        dados = c.fetchall()
-
-        logs = []
-        for l in dados:
-            logs.append({
-                "usuario": l[0],
-                "acao": l[1],
-                "data": l[2]
-            })
-
-        conn.close()
-
+        with open("logs.json", "r", encoding="utf-8") as f:
+            logs = json.load(f)
+        total_usuarios = len(ler_usuarios())
         return render_template("dashboard_admin.html",
-                               total_usuarios=total,
+                               total_usuarios=total_usuarios,
                                logs=logs)
+    else:
+        return render_template("dashboard_usuario.html",
+                               nome=usuario["nome"])
 
-    return render_template("dashboard_usuario.html",
-                           nome=usuario["nome"])
+
+@app.route("/upload", methods=["GET", "POST"])
+def upload():
+    if "usuario" not in session:
+        return redirect("/login")
+
+    if request.method == "POST":
+        arquivo = request.files["arquivo"]
+        if arquivo:
+            MINIO_CLIENT.put_object(
+                BUCKET_NAME,
+                arquivo.filename,
+                arquivo,
+                length=os.fstat(arquivo.fileno()).st_size
+            )
+            registrar_log(session["usuario"]["email"], f"upload_arquivo:{arquivo.filename}")
+            return f"Arquivo {arquivo.filename} enviado com sucesso!"
+    return render_template("upload.html")
 
 
 @app.route("/logout")
@@ -173,4 +113,4 @@ def logout():
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
