@@ -10,10 +10,17 @@ DATABASE = "cafunfo.db"
 
 
 # -----------------------
-# CRIAR BANCO AUTOMÁTICO
+# CONEXÃO
+# -----------------------
+def conectar():
+    return sqlite3.connect(DATABASE)
+
+
+# -----------------------
+# CRIAR BANCO AUTOMATICAMENTE
 # -----------------------
 def criar_banco():
-    conn = sqlite3.connect(DATABASE)
+    conn = conectar()
     c = conn.cursor()
 
     c.execute("""
@@ -45,10 +52,13 @@ def criar_banco():
     conn.close()
 
 
-def conectar():
-    return sqlite3.connect(DATABASE)
+# 🔥 IMPORTANTE: Executa sempre
+criar_banco()
 
 
+# -----------------------
+# REGISTRAR LOG
+# -----------------------
 def registrar_log(email, acao):
     conn = conectar()
     c = conn.cursor()
@@ -163,5 +173,4 @@ def logout():
 
 
 if __name__ == "__main__":
-    criar_banco()
     app.run()
