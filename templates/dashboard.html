@@ -1,1 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard - Cafunfo Cloud</title>
+<style>
+body { font-family:'Arial', sans-serif; background: linear-gradient(135deg, #8360c3, #2ebf91); color:#fff; padding:30px; }
+h1 { margin-bottom:20px; }
+a.button { display:inline-block; margin:10px; padding:12px 25px; background-color:#ffcc00; color:#333; border-radius:10px; text-decoration:none; font-weight:bold; }
+a.button:hover { background-color:#e6b800; }
+section { margin-top:30px; background-color: rgba(0,0,0,0.4); padding:20px; border-radius:15px; }
+table { width:100%; border-collapse:collapse; margin-top:15px; }
+th, td { border:1px solid #fff; padding:8px; text-align:left; }
+th { background-color: rgba(255,255,255,0.2); }
+</style>
+</head>
+<body>
+<h1>Bem-vindo, {{ usuario.nome }}!</h1>
+<a href="/download_db" class="button">📥 Baixar Banco de Dados</a>
+<a href="/logout" class="button">Sair</a>
 
+<section>
+<h2>Console do Site</h2>
+<p>Total de usuários cadastrados: {{ total_usuarios }}</p>
+<h3>Logs recentes:</h3>
+<table>
+<tr><th>Usuário</th><th>Ação</th><th>Data</th></tr>
+{% for log in logs %}
+<tr>
+<td>{{ log.usuario }}</td>
+<td>{{ log.acao }}</td>
+<td>{{ log.data }}</td>
+</tr>
+{% endfor %}
+</table>
+</section>
+</body>
+</html>
