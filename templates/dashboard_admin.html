@@ -15,7 +15,7 @@
 
     <ul>
     {% for log in logs %}
-        <li>{{ log[0] }} - {{ log[1] }} - {{ log[2] }}</li>
+        <li>{{ log.usuario }} - {{ log.acao }} - {{ log.data }}</li>
     {% endfor %}
     </ul>
 
