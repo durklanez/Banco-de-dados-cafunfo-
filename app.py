@@ -4,16 +4,14 @@ from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.secret_key = "cafunfo_secret"
-
-# sessão dura 30 minutos
 app.permanent_session_lifetime = timedelta(minutes=30)
 
 DATABASE = "cafunfo.db"
 
 
-# ----------------------
+# -----------------------
 # CRIAR BANCO AUTOMÁTICO
-# ----------------------
+# -----------------------
 def criar_banco():
     conn = sqlite3.connect(DATABASE)
     c = conn.cursor()
@@ -38,7 +36,7 @@ def criar_banco():
     """)
 
     # cria admin padrão se não existir
-    c.execute("SELECT * FROM usuarios WHERE email = ?", ("admin@cafunfo.com",))
+    c.execute("SELECT * FROM usuarios WHERE email=?", ("admin@cafunfo.com",))
     if not c.fetchone():
         c.execute("INSERT INTO usuarios (nome,email,senha,tipo) VALUES (?,?,?,?)",
                   ("Durk", "admin@cafunfo.com", "123456", "admin"))
@@ -60,9 +58,9 @@ def registrar_log(email, acao):
     conn.close()
 
 
-# ----------------------
+# -----------------------
 # ROTAS
-# ----------------------
+# -----------------------
 
 @app.route("/")
 def home():
@@ -137,8 +135,16 @@ def dashboard():
         c.execute("SELECT COUNT(*) FROM usuarios")
         total = c.fetchone()[0]
 
-        c.execute("SELECT usuario,acao,data FROM logs ORDER BY id DESC")
-        logs = c.fetchall()
+        c.execute("SELECT usuario, acao, data FROM logs ORDER BY id DESC")
+        dados = c.fetchall()
+
+        logs = []
+        for l in dados:
+            logs.append({
+                "usuario": l[0],
+                "acao": l[1],
+                "data": l[2]
+            })
 
         conn.close()
 
