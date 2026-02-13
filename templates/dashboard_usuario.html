@@ -2,11 +2,32 @@
 <html>
 <head>
     <title>Painel Usuário</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body{
+            font-family: Arial;
+            background:#0f2027;
+            background: linear-gradient(to right,#2c5364,#203a43,#0f2027);
+            color:white;
+            text-align:center;
+            padding-top:80px;
+        }
+
+        button{
+            padding:12px;
+            width:200px;
+            background:white;
+            color:black;
+            border:none;
+            border-radius:6px;
+        }
+    </style>
 </head>
-<body style="font-family:Arial; text-align:center;">
+
+<body>
 
     <h2>Bem-vindo {{ nome }}</h2>
-
     <p>Seu banco está ativo.</p>
 
     <a href="/logout">
