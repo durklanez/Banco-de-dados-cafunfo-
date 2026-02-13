@@ -1,30 +1,40 @@
-from flask import Flask, render_template, request, redirect, session
+from flask import Flask, render_template, request, redirect, session, send_file
 import json
 import datetime
-import os
-from minio import Minio
-from banco import ler_usuarios, salvar_usuarios, registrar_log
+import io
 
 app = Flask(__name__)
 app.secret_key = "cafunfo_secret"
 
-# Configuração MinIO (Cafunfo Cloud)
-MINIO_CLIENT = Minio(
-    "localhost:9000",      # Troque para URL do MinIO real se estiver na nuvem
-    access_key="admin",
-    secret_key="senha123",
-    secure=False
-)
-BUCKET_NAME = "arquivos"
+USUARIOS_ARQ = "usuarios.json"
+LOGS_ARQ = "logs.json"
 
-if not MINIO_CLIENT.bucket_exists(BUCKET_NAME):
-    MINIO_CLIENT.make_bucket(BUCKET_NAME)
+# --- Funções ---
+def ler_usuarios():
+    with open(USUARIOS_ARQ, "r", encoding="utf-8") as f:
+        return json.load(f)
 
+def salvar_usuarios(dados):
+    with open(USUARIOS_ARQ, "w", encoding="utf-8") as f:
+        json.dump(dados, f, indent=2)
 
+def registrar_log(email, acao):
+    with open(LOGS_ARQ, "r", encoding="utf-8") as f:
+        logs = json.load(f)
+
+    logs.append({
+        "usuario": email,
+        "acao": acao,
+        "data": str(datetime.datetime.now())
+    })
+
+    with open(LOGS_ARQ, "w", encoding="utf-8") as f:
+        json.dump(logs, f, indent=2)
+
+# --- Rotas ---
 @app.route("/")
 def home():
     return render_template("home.html")
-
 
 @app.route("/registrar", methods=["GET", "POST"])
 def registrar():
@@ -32,41 +42,40 @@ def registrar():
         usuarios = ler_usuarios()
         email = request.form["email"]
 
-        # Bloquear email duplicado
         if any(u["email"] == email for u in usuarios):
-            return "E-mail já cadastrado!"
+            return "Este email já existe"
 
-        novo_usuario = {
+        novo = {
             "nome": request.form["nome"],
             "email": email,
             "senha": request.form["senha"],
             "tipo": "usuario"
         }
 
-        usuarios.append(novo_usuario)
+        usuarios.append(novo)
         salvar_usuarios(usuarios)
         registrar_log(email, "criou_conta")
+
         return redirect("/login")
 
     return render_template("registrar.html")
-
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         email = request.form["email"]
         senha = request.form["senha"]
-        usuarios = ler_usuarios()
 
+        usuarios = ler_usuarios()
         for u in usuarios:
             if u["email"] == email and u["senha"] == senha:
                 session["usuario"] = u
                 registrar_log(email, "login")
                 return redirect("/dashboard")
+
         return "Login inválido"
 
     return render_template("login.html")
-
 
 @app.route("/dashboard")
 def dashboard():
@@ -74,43 +83,37 @@ def dashboard():
         return redirect("/login")
 
     usuario = session["usuario"]
+    usuarios = ler_usuarios()
+    with open(LOGS_ARQ, "r", encoding="utf-8") as f:
+        logs = json.load(f)
 
-    if usuario["tipo"] == "admin":
-        with open("logs.json", "r", encoding="utf-8") as f:
-            logs = json.load(f)
-        total_usuarios = len(ler_usuarios())
-        return render_template("dashboard_admin.html",
-                               total_usuarios=total_usuarios,
-                               logs=logs)
-    else:
-        return render_template("dashboard_usuario.html",
-                               nome=usuario["nome"])
+    return render_template("dashboard.html",
+                           usuario=usuario,
+                           total_usuarios=len(usuarios),
+                           logs=logs)
 
-
-@app.route("/upload", methods=["GET", "POST"])
-def upload():
+@app.route("/download_db")
+def download_db():
     if "usuario" not in session:
         return redirect("/login")
 
-    if request.method == "POST":
-        arquivo = request.files["arquivo"]
-        if arquivo:
-            MINIO_CLIENT.put_object(
-                BUCKET_NAME,
-                arquivo.filename,
-                arquivo,
-                length=os.fstat(arquivo.fileno()).st_size
-            )
-            registrar_log(session["usuario"]["email"], f"upload_arquivo:{arquivo.filename}")
-            return f"Arquivo {arquivo.filename} enviado com sucesso!"
-    return render_template("upload.html")
+    # Cria arquivo em memória
+    db_data = {
+        "usuarios": ler_usuarios(),
+        "logs": json.load(open(LOGS_ARQ, "r", encoding="utf-8"))
+    }
+    json_bytes = io.BytesIO()
+    json_bytes.write(json.dumps(db_data, indent=2).encode())
+    json_bytes.seek(0)
 
+    return send_file(
+        json_bytes,
+        download_name="cafunfo_db.json",
+        as_attachment=True,
+        mimetype="application/json"
+    )
 
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/")
-
-
-if __name__ == "__main__":
-    app.run(debug=True)
