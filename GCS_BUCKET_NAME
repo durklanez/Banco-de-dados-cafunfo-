@@ -1,1 +1,1 @@
-
+export GOOGLE_APPLICATION_CREDENTIALS="caminho/para/seu/arquivo-credentials.json"
